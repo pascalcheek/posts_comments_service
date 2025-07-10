@@ -10,7 +10,7 @@ type commentRepository struct {
 	mu           sync.RWMutex
 	comments     map[string]*models.Comment
 	commentsTree map[string]*commentLevel
-	postsById    map[string]*models.Post
+	postRepo     repositories.PostRepository
 }
 
 type commentLevel struct {
@@ -18,11 +18,11 @@ type commentLevel struct {
 	indexMap map[string]int
 }
 
-func NewCommentRepository() repositories.CommentRepository {
+func NewCommentRepository(postRepo repositories.PostRepository) repositories.CommentRepository {
 	return &commentRepository{
 		comments:     make(map[string]*models.Comment),
 		commentsTree: make(map[string]*commentLevel),
-		postsById:    make(map[string]*models.Post),
+		postRepo:     postRepo,
 	}
 }
 
@@ -34,45 +34,35 @@ func (r *commentRepository) Create(comment *models.Comment) error {
 		return repositories.ErrTextTooLong
 	}
 
-	// Проверяем существование поста
-	post, exists := r.postsById[comment.PostID]
-	if !exists {
+	// Проверяем существование поста через postRepo
+	post, err := r.postRepo.GetByID(comment.PostID)
+	if err != nil {
 		return repositories.ErrNotFound
-	}
-
-	// Если это ответ на комментарий - проверяем существование родителя
-	if comment.ParentID != nil {
-		parentComment, exists := r.comments[*comment.ParentID]
-		if !exists {
-			return repositories.ErrParentNotFound
-		}
-		// Убедимся, что родитель принадлежит тому же посту
-		if parentComment.PostID != comment.PostID {
-			return repositories.ErrWrongParentPost
-		}
 	}
 
 	if !post.AllowComments {
 		return repositories.ErrCommentsDisabled
 	}
 
-	// Определяем уровень в иерархии
+	if comment.ParentID != nil {
+		if parent, exists := r.comments[*comment.ParentID]; !exists || parent.PostID != comment.PostID {
+			return repositories.ErrParentNotFound
+		}
+	}
+
 	levelKey := comment.PostID
 	if comment.ParentID != nil {
 		levelKey = *comment.ParentID
 	}
 
-	// Получаем или создаем уровень
-	level, exists := r.commentsTree[levelKey]
-	if !exists {
-		level = &commentLevel{
+	if _, exists := r.commentsTree[levelKey]; !exists {
+		r.commentsTree[levelKey] = &commentLevel{
 			comments: make([]*models.Comment, 0),
 			indexMap: make(map[string]int),
 		}
-		r.commentsTree[levelKey] = level
 	}
 
-	// Сохраняем комментарий
+	level := r.commentsTree[levelKey]
 	level.indexMap[comment.ID] = len(level.comments)
 	level.comments = append(level.comments, comment)
 	r.comments[comment.ID] = comment
@@ -87,6 +77,7 @@ func (r *commentRepository) GetByPostID(postID string, parentID *string, limit i
 	if limit <= 0 {
 		return []*models.Comment{}, false, nil
 	}
+
 	levelKey := postID
 	if parentID != nil {
 		levelKey = *parentID
@@ -102,7 +93,6 @@ func (r *commentRepository) GetByPostID(postID string, parentID *string, limit i
 		return nil, false, nil
 	}
 
-	// Для DESC (новые сначала)
 	if sortOrder == "DESC" {
 		start := total - 1
 		if after != nil {
@@ -128,7 +118,7 @@ func (r *commentRepository) GetByPostID(postID string, parentID *string, limit i
 		return result, start-limit >= 0, nil
 	}
 
-	// Для ASC (старые сначала)
+	// ASC order
 	start := 0
 	if after != nil {
 		if idx, ok := level.indexMap[*after]; ok {
@@ -150,35 +140,18 @@ func (r *commentRepository) Count(postID string, parentID *string) (int, error) 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	// Определяем ключ уровня в иерархии
 	levelKey := postID
 	if parentID != nil {
-		// Проверяем существование родительского комментария
 		if _, exists := r.comments[*parentID]; !exists {
 			return 0, repositories.ErrParentNotFound
 		}
 		levelKey = *parentID
 	}
 
-	// Проверяем существование поста для корневых комментариев
-	if parentID == nil {
-		if _, exists := r.postsById[postID]; !exists {
-			return 0, repositories.ErrNotFound
-		}
-	}
-
-	// Получаем уровень комментариев
 	level, exists := r.commentsTree[levelKey]
 	if !exists {
-		return 0, nil // Уровень существует, но комментариев нет
+		return 0, nil
 	}
 
-	// Возвращаем количество комментариев на этом уровне
 	return len(level.comments), nil
-}
-
-func (r *commentRepository) SetPost(post *models.Post) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.postsById[post.ID] = post
 }

@@ -13,11 +13,6 @@ type commentRepository struct {
 	db *sql.DB
 }
 
-func (r *commentRepository) SetPost(post *models.Post) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewCommentRepository(db *sql.DB) repositories.CommentRepository {
 	return &commentRepository{db: db}
 }

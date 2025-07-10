@@ -34,7 +34,7 @@ func main() {
 	switch *storeType {
 	case "memory":
 		postRepo = memory.NewPostRepository()
-		commentRepo = memory.NewCommentRepository()
+		commentRepo = memory.NewCommentRepository(postRepo)
 		log.Println("Using MEMORY storage")
 
 	case "postgres":
@@ -69,7 +69,7 @@ func main() {
 
 	srv := handler.NewDefaultServer(executableSchema)
 
-	http.Handle("/", playground.Handler("GraphQL Playground", "/query"))
+	http.Handle("/", playground.Handler("Playground", "/query"))
 	http.Handle("/query", srv)
 
 	log.Printf("Server started at http://localhost:%s", *port)

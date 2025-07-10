@@ -155,7 +155,7 @@ func convertDomainCommentToModel(comment *models.Comment) *model.Comment {
 		Text:         comment.Text,
 		Author:       comment.Author,
 		CreatedAt:    comment.CreatedAt,
-		RepliesCount: 0, // Можно реализовать подсчет если нужно
+		RepliesCount: 0,
 	}
 }
 

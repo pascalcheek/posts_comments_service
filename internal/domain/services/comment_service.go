@@ -14,7 +14,9 @@ type CommentService struct {
 }
 
 func NewCommentService(repo repositories.CommentRepository) *CommentService {
-	return &CommentService{repo: repo}
+	return &CommentService{
+		repo: repo,
+	}
 }
 
 func (s *CommentService) AddComment(postID, author, text string, parentID *string) (*models.Comment, error) {

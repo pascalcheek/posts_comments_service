@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234567890qwe
+      POSTGRES_DB: posts_comments_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d posts_comments_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./migrations:/migrations
+    command: -path=/migrations -database postgres://postgres:1234567890qwe@db:5432/posts_comments_db?sslmode=disable up
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      STORE_TYPE: ${STORE_TYPE:-postgres} # По умолчанию postgres
+      DB_DSN: postgres://postgres:1234567890qwe@db:5432/posts_comments_db?sslmode=disable
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  postgres_data:

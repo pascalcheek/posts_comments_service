@@ -1,13 +1,33 @@
-FROM golang:1.21-alpine
+# Build stage
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
-COPY . .
 
+RUN apk --no-cache add git ca-certificates
+
+COPY go.mod go.sum ./
 RUN go mod download
-RUN go install github.com/99designs/gqlgen@v0.17.24
-RUN go run github.com/99designs/gqlgen generate
 
-RUN go build -o server ./cmd/server
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o server ./cmd/server/main.go
+
+# Runtime stage
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=builder /app/server .
+COPY --from=builder /app/internal/delivery/graphql/schema.graphql ./graphql/
+COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app
+
+USER appuser
 
 EXPOSE 8080
-CMD ["./server"]
+
+# При запуске проверяем переменную MIGRATE
+CMD ["./server", "-store=postgres", "-dsn=postgres://postgres:1234567890qwe@db:5432/posts_comments_db?sslmode=disable"]
+

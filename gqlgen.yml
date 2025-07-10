@@ -1,15 +1,21 @@
 schema:
-  - graph/schema.graphql         
+  - internal/delivery/graphql/schema.graphql
 
 exec:
-  filename: graph/generated/generated.go
+  filename: internal/delivery/graphql/generated/generated.go
   package: generated
 
 model:
-  filename: graph/model/models_gen.go
+  filename: internal/delivery/graphql/model/models_gen.go
   package: model
 
 resolver:
-  layout: follow-schema
-  dir: graph
-  package: graph
+  filename: internal/delivery/graphql/schema.resolvers.go
+  type: Resolver
+  package: graphql
+
+models:
+  Post:
+    model: posts_comments_service/internal/delivery/graphql/model.Post
+  Comment:
+    model: posts_comments_service/internal/delivery/graphql/model.Comment

@@ -48,3 +48,7 @@ func (s *CommentService) GetComments(postID string, parentID *string, limit int,
 func (s *CommentService) GetCommentsCount(postID string, parentID *string) (int, error) {
 	return s.repo.Count(postID, parentID)
 }
+
+func (s *CommentService) GetRepliesCounts(postID string) (map[string]int, error) {
+	return s.repo.CountReplies(postID)
+}

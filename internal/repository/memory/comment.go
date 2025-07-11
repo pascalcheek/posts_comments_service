@@ -14,6 +14,22 @@ type commentRepository struct {
 	postRepo     repositories.PostRepository
 }
 
+func (r *commentRepository) CountReplies(postID string) (map[string]int, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	counts := make(map[string]int)
+
+	for _, comment := range r.comments {
+		if comment.PostID != postID || comment.ParentID == nil {
+			continue
+		}
+		counts[*comment.ParentID]++
+	}
+
+	return counts, nil
+}
+
 type commentLevel struct {
 	comments []*models.Comment
 	indexMap map[string]int

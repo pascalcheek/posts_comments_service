@@ -120,6 +120,11 @@ func (r *queryResolver) PostWithComments(ctx context.Context, postID string, aft
 		return nil, err
 	}
 
+	repliesCountMap, err := r.commentService.GetRepliesCounts(postID)
+	if err != nil {
+		return nil, err
+	}
+
 	total, err := r.commentService.GetCommentsCount(postID, nil)
 	if err != nil {
 		return nil, err
@@ -127,7 +132,7 @@ func (r *queryResolver) PostWithComments(ctx context.Context, postID string, aft
 
 	return &model.PostWithComments{
 		Post:          convertDomainPostToModel(post),
-		Comments:      convertDomainCommentsToModel(comments),
+		Comments:      convertDomainCommentsToModelWithReplies(comments, repliesCountMap),
 		TotalComments: total,
 	}, nil
 }
@@ -179,13 +184,7 @@ func convertToCommentEdges(comments []*models.Comment) []*model.CommentEdge {
 	}
 	return edges
 }
-func convertDomainCommentsToModel(comments []*models.Comment) []*model.Comment {
-	result := make([]*model.Comment, len(comments))
-	for i, c := range comments {
-		result[i] = convertDomainCommentToModel(c)
-	}
-	return result
-}
+
 func generatePageInfo(hasMore bool, comments []*models.Comment) *model.PageInfo {
 	if len(comments) == 0 {
 		return &model.PageInfo{
@@ -200,4 +199,21 @@ func generatePageInfo(hasMore bool, comments []*models.Comment) *model.PageInfo 
 		EndCursor:       &lastID,
 		HasPreviousPage: false,
 	}
+}
+
+func convertDomainCommentsToModelWithReplies(comments []*models.Comment, repliesMap map[string]int) []*model.Comment {
+	result := make([]*model.Comment, len(comments))
+	for i, c := range comments {
+		count := repliesMap[c.ID]
+		result[i] = &model.Comment{
+			ID:           c.ID,
+			PostID:       c.PostID,
+			ParentID:     c.ParentID,
+			Text:         c.Text,
+			Author:       c.Author,
+			CreatedAt:    c.CreatedAt,
+			RepliesCount: count,
+		}
+	}
+	return result
 }

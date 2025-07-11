@@ -176,3 +176,35 @@ func (r *commentRepository) Count(postID string, parentID *string) (int, error) 
 
 	return count, nil
 }
+
+func (r *commentRepository) CountReplies(postID string) (map[string]int, error) {
+	query := `
+		SELECT parent_id, COUNT(*)
+		FROM comments
+		WHERE post_id = $1 AND parent_id IS NOT NULL
+		GROUP BY parent_id
+	`
+
+	postUUID, err := uuid.Parse(postID)
+	if err != nil {
+		return nil, repositories.ErrNotFound
+	}
+
+	rows, err := r.db.Query(query, postUUID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make(map[string]int)
+	for rows.Next() {
+		var parentID uuid.UUID
+		var count int
+		if err := rows.Scan(&parentID, &count); err != nil {
+			return nil, err
+		}
+		result[parentID.String()] = count
+	}
+
+	return result, nil
+}

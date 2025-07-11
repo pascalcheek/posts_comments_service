@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"posts_comments_service/internal/domain/constants"
 	"posts_comments_service/internal/domain/models"
 	"posts_comments_service/internal/domain/repositories"
 	"sync"
@@ -52,7 +53,7 @@ func (r *postRepository) List(limit int, after *string, sortOrder string) ([]*mo
 	}
 
 	// Для DESC порядка (новые сначала)
-	if sortOrder == "DESC" || sortOrder == "" {
+	if sortOrder == constants.SortDesc || sortOrder == "" {
 		startIdx := total - 1
 		if after != nil {
 			post, exists := r.postsById[*after]

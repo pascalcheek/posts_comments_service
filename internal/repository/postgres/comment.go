@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"posts_comments_service/internal/domain/constants"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,7 +19,7 @@ func NewCommentRepository(db *sql.DB) repositories.CommentRepository {
 }
 
 func (r *commentRepository) Create(comment *models.Comment) error {
-	if len(comment.Text) > 2000 {
+	if len(comment.Text) > constants.MaxCommentLength {
 		return repositories.ErrTextTooLong
 	}
 
@@ -76,7 +77,7 @@ func (r *commentRepository) GetByPostID(postID string, parentID *string, limit i
 		}
 	}
 
-	if sortOrder == "ASC" {
+	if sortOrder == constants.SortAsc {
 		query = `
             SELECT id, post_id, parent_id, author, text, created_at
             FROM comments

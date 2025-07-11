@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"github.com/google/uuid"
+	"posts_comments_service/internal/domain/constants"
 	"time"
 
 	"posts_comments_service/internal/domain/models"
@@ -20,7 +21,7 @@ func NewCommentService(repo repositories.CommentRepository) *CommentService {
 }
 
 func (s *CommentService) AddComment(postID, author, text string, parentID *string) (*models.Comment, error) {
-	if len(text) > 2000 {
+	if len(text) > constants.MaxCommentLength {
 		return nil, errors.New("comment text exceeds the 2000 character limit")
 	}
 

@@ -30,6 +30,12 @@ type PageInfo struct {
 	StartCursor     *string `json:"startCursor,omitempty"`
 }
 
+type PostWithComments struct {
+	Post          *Post      `json:"post"`
+	Comments      []*Comment `json:"comments"`
+	TotalComments int        `json:"totalComments"`
+}
+
 type Query struct {
 }
 

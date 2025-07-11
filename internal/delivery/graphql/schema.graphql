@@ -75,3 +75,13 @@ type Mutation {
         author: String!
     ): Comment!
 }
+
+type PostWithComments {
+    post: Post!
+    comments: [Comment!]!
+    totalComments: Int!
+}
+
+extend type Query {
+    postWithComments(postId: ID!, after: ID, first: Int = 10): PostWithComments!
+}

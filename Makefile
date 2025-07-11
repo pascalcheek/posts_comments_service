@@ -1,6 +1,5 @@
 .PHONY: help db.up db.migrate local.run docker.full.run clean test
 
-# Настройки по умолчанию
 DB_NAME ?= posts_comments_db
 DB_USER ?= postgres
 DB_PASS ?= 1234567890qwe
@@ -23,13 +22,11 @@ help:
 	@echo "  make local.run STORE_TYPE=memory"
 	@echo "  make docker.full.run STORE_TYPE=postgres"
 
-# Запуск только PostgreSQL в Docker
 db.up:
 	docker-compose up -d db
 	@echo "PostgreSQL запущен на localhost:${DB_PORT}"
 	@echo "Данные: ${DB_USER}:${DB_PASS}@localhost:${DB_PORT}/${DB_NAME}"
 
-# Применение миграций через Docker
 db.migrate:
 	@if [ "${STORE_TYPE}" = "postgres" ]; then \
 		docker-compose run --rm migrate; \
@@ -37,7 +34,6 @@ db.migrate:
 		echo "Миграции не требуются для STORE_TYPE=memory"; \
 	fi
 
-# Локальный запуск сервера (без Docker)
 local.run:
 	@echo "Запуск сервера с хранилищем: ${STORE_TYPE}"
 	go run cmd/server/main.go \
@@ -45,7 +41,7 @@ local.run:
 		$(if $(filter $(STORE_TYPE),postgres),-dsn "postgres://${DB_USER}:${DB_PASS}@localhost:${DB_PORT}/${DB_NAME}?sslmode=disable") \
 		-port ${APP_PORT}
 
-# Полный запуск в Docker (app + db + migrations)
+
 docker.full.run:
 	@echo "Запуск полного стека с хранилищем: ${STORE_TYPE}"
 	STORE_TYPE=${STORE_TYPE} docker-compose up -d --build
@@ -65,12 +61,10 @@ docker.full.run:
 		echo "  - PostgreSQL: postgres://${DB_USER}:*****@localhost:${DB_PORT}/${DB_NAME}"; \
 	fi
 
-# Остановка и очистка
 clean:
 	docker-compose down -v
 	rm -f server
 	@echo "Все контейнеры и volumes удалены"
 
-# Запуск тестов
 test:
 	go test ./... -v -cover

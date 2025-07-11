@@ -1,4 +1,3 @@
-# Build stage
 FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
@@ -11,7 +10,6 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o server ./cmd/server/main.go
 
-# Runtime stage
 FROM alpine:latest
 
 WORKDIR /app
@@ -28,6 +26,5 @@ USER appuser
 
 EXPOSE 8080
 
-# При запуске проверяем переменную MIGRATE
 CMD ["./server", "-store=postgres", "-dsn=postgres://postgres:1234567890qwe@db:5432/posts_comments_db?sslmode=disable"]
 

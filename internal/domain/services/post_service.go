@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"posts_comments_service/internal/domain/constants"
 	"time"
 
 	"github.com/google/uuid"
@@ -39,7 +40,7 @@ func (s *PostService) GetPost(id string) (*models.Post, error) {
 }
 
 func (s *PostService) GetPosts(limit int, after *string, sortOrder string) ([]*models.Post, error) {
-	if sortOrder != "ASC" && sortOrder != "DESC" {
+	if sortOrder != constants.SortAsc && sortOrder != constants.SortDesc {
 		return nil, errors.New("invalid sort order")
 	}
 	return s.repo.List(limit, after, sortOrder)

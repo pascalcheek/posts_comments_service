@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"posts_comments_service/internal/domain/constants"
 	"time"
 
 	"github.com/google/uuid"
@@ -71,7 +72,7 @@ func (r *postRepository) List(limit int, after *string, sortOrder string) ([]*mo
 		}
 	}
 
-	if sortOrder == "ASC" {
+	if sortOrder == constants.SortAsc {
 		query = `
             SELECT id, title, content, author, allow_comments, created_at
             FROM posts

@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"posts_comments_service/internal/domain/constants"
 	"posts_comments_service/internal/domain/models"
 	"posts_comments_service/internal/domain/repositories"
 	"sync"
@@ -30,7 +31,7 @@ func (r *commentRepository) Create(comment *models.Comment) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if len(comment.Text) > 2000 {
+	if len(comment.Text) > constants.MaxCommentLength {
 		return repositories.ErrTextTooLong
 	}
 
@@ -93,7 +94,7 @@ func (r *commentRepository) GetByPostID(postID string, parentID *string, limit i
 		return nil, false, nil
 	}
 
-	if sortOrder == "DESC" {
+	if sortOrder == constants.SortDesc {
 		start := total - 1
 		if after != nil {
 			if idx, ok := level.indexMap[*after]; ok {
@@ -118,7 +119,6 @@ func (r *commentRepository) GetByPostID(postID string, parentID *string, limit i
 		return result, start-limit >= 0, nil
 	}
 
-	// ASC order
 	start := 0
 	if after != nil {
 		if idx, ok := level.indexMap[*after]; ok {

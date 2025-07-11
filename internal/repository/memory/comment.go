@@ -51,7 +51,6 @@ func (r *commentRepository) Create(comment *models.Comment) error {
 		return repositories.ErrTextTooLong
 	}
 
-	// Проверяем существование поста через postRepo
 	post, err := r.postRepo.GetByID(comment.PostID)
 	if err != nil {
 		return repositories.ErrNotFound

@@ -1,4 +1,3 @@
--- Таблица постов
 CREATE TABLE IF NOT EXISTS posts (
                                      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
@@ -8,7 +7,6 @@ CREATE TABLE IF NOT EXISTS posts (
     created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
--- Таблица комментариев
 CREATE TABLE IF NOT EXISTS comments (
                                         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
@@ -18,6 +16,5 @@ CREATE TABLE IF NOT EXISTS comments (
     created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
--- Индексы для ускорения выборки
 CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);
 CREATE INDEX IF NOT EXISTS idx_comments_parent_id ON comments(parent_id);

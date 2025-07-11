@@ -52,7 +52,6 @@ func (r *postRepository) List(limit int, after *string, sortOrder string) ([]*mo
 		return []*models.Post{}, nil
 	}
 
-	// Для DESC порядка (новые сначала)
 	if sortOrder == constants.SortDesc || sortOrder == "" {
 		startIdx := total - 1
 		if after != nil {
@@ -75,7 +74,6 @@ func (r *postRepository) List(limit int, after *string, sortOrder string) ([]*mo
 		return result, nil
 	}
 
-	// Для ASC порядка (старые сначала)
 	start := 0
 	if after != nil {
 		post, exists := r.postsById[*after]
